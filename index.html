@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Socket.IO game</title>
+	<meta charset="UTF-8">
+	<style>
+		#box{
+			border:1px solid #d3d3d3;
+			background-color: #f1f1f1;
+			width:200px;
+			height:200px;
+			overflow: hidden;
+		}
+		.gamebox{
+			width:10px;
+			height:10px;
+			top: 0px;
+			left: 0px;
+			position: relative;
+		}
+	</style>
+  </head>
+  <body>
+    <form id="form" action="">
+      <input id="input" placeholder="name" autocomplete="off" /> 
+	  <input id="input2" placeholder="color#" autocomplete="off" /> 
+	  <button>Enter</button>
+	  <div id="box">
+	  </div>
+    </form>
+</canvas>
+	
+	<script src="/socket.io/socket.io.js"></script>
+	<script>
+	  var socket = io();
+	  var form = document.getElementById('form');
+	  var input = document.getElementById('input');
+	  var color = document.getElementById('input2');
+	  var box = document.getElementById('box');
+
+	
+	  form.addEventListener('submit', function(e) {
+		e.preventDefault();
+		if (input.value) {
+		  socket.emit('name', input.value , color.value);
+		  input.disabled = true;
+		  color.disabled = true;
+		}  
+	  });
+	 
+	 socket.on('create game', function(name , colour) {
+			var gamecontrol = document.createElement("div");
+			gamecontrol.classList.add("gamebox");
+			gamecontrol.style.background = colour;
+			gamecontrol.id = name;
+			box.appendChild(gamecontrol);  
+
+		socket.on('load players', function(data){
+			console.log(data);
+			if(data){
+				for (var key in data) {
+					console.log(data[key]);
+					var gamecontrol = document.createElement("div");
+					gamecontrol.classList.add("gamebox");
+					gamecontrol.style.background = data[key][0];
+					gamecontrol.id = key;
+					gamecontrol.style.top = data[key][1] + 'px';
+					gamecontrol.style.left = data[key][2] + 'px';
+					box.appendChild(gamecontrol);  
+				}
+			}			
+		});
+
+			document.onkeydown = checkKey;
+
+			function checkKey(e) {
+
+				e = e || window.event;
+
+				if (e.keyCode == '38') {
+					// up arrow
+					socket.emit('movement', 'up' , input.value  );
+				}
+				else if (e.keyCode == '40') {
+					// down arrow
+					socket.emit('movement', 'down' ,input.value   );
+				}
+				else if (e.keyCode == '37') {
+				   // left arrow
+				   socket.emit('movement', 'left' ,input.value   );
+				}
+				else if (e.keyCode == '39') {
+				   // right arrow
+				   socket.emit('movement', 'right' , input.value  );
+				}
+			}
+			
+			socket.on('movement', function(type , input) {
+				var game = document.getElementById(input);
+				  switch(type) {
+					  case 'up':
+						var direction = parseInt(window.getComputedStyle(game).top)  - 1;
+						if(direction != 0){
+							game.style.top = direction +'px';
+						 }
+						break;
+					  case 'down':
+						  var direction = parseInt(window.getComputedStyle(game).top)  + 1;
+						  if(direction != 190){
+							game.style.top = direction + 'px';
+						  }
+						break;
+						case 'left':
+						var direction = parseInt(window.getComputedStyle(game).left) - 1;
+						 if(direction != 0){
+							game.style.left = direction + 'px';
+						  }
+						break;
+						case 'right':
+						  var direction = parseInt(window.getComputedStyle(game).left) + 1;
+						  if(direction != 190){
+						  game.style.left = direction + 'px';
+						  }
+						break;
+					}
+					
+			 });
+	 });
+	 
+
+	
+
+	</script>
+  </body>
+</html>
